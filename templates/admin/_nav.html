@@ -1,0 +1,1 @@
+<nav class="admin-nav" aria-label="Staff navigation"><a href="{{ url_for('admin_dashboard') }}">Enquiries & applications</a><a href="{{ url_for('admin_posts') }}">Journal articles</a><form method="post" action="{{ url_for('admin_logout') }}">{{ delete_form.hidden_tag() }}<button type="submit">Sign out</button></form></nav>

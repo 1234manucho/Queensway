@@ -1,0 +1,59 @@
+{% macro icon(name, cls='') %}
+<svg class="icon {{ cls }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{% if name == 'arrow' %}<path d="M4 12h15m-6-6 6 6-6 6"/>
+{% elif name == 'up-right' %}<path d="M6 18 18 6M6 6h12v12"/>
+{% elif name == 'heart' %}<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>
+{% elif name == 'spark' %}<path d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6Z"/><path d="M20 2v4m-2-2h4"/>
+{% elif name == 'scale' %}<path d="M12 3v18M6 21h12M4 7h16M5 7 1 15h8L5 7Zm14 0-4 8h8l-4-8Z"/>
+{% elif name == 'hand' %}<path d="m3 11 4-4 4 1 3-1 7 5-3 6-5 3-8-5-2-5Z"/><path d="m8 8-2 5 3 2 3-4 6 5m-9-1 5 5"/>
+{% elif name == 'people' %}<circle cx="12" cy="7" r="3"/><path d="M6 21v-4a6 6 0 0 1 12 0v4M4 5a3 3 0 0 0 0 6m-1 3a4 4 0 0 0-2 4v3M20 5a3 3 0 0 1 0 6m1 3a4 4 0 0 1 2 4v3"/>
+{% elif name == 'leaf' %}<path d="M20 3c0 11-1 17-9 17a7 7 0 0 1-7-7C4 5 12 5 20 3ZM3 22l12-12"/>
+{% elif name == 'book' %}<path d="M12 5c-3-3-8-2-10-1v15c3-1 7-2 10 1 3-3 7-2 10-1V4c-2-1-7-2-10 1Zm0 0v15"/>
+{% elif name == 'sun' %}<circle cx="12" cy="12" r="4"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>
+{% elif name == 'check' %}<path d="m5 12 4 4L19 6"/>
+{% elif name == 'calendar' %}<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18m-12 5h6"/>
+{% elif name == 'pin' %}<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/>
+{% else %}<circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/>{% endif %}
+</svg>
+{% endmacro %}
+
+{% macro school_image(key, cls='', eager=false) %}
+{% set photo = school_photos.get(key, school_photos['classroom']) %}
+<img class="school-photo {{ cls }}" src="{{ url_for('static', filename='images/'+photo.file) }}" alt="{{ photo.alt }}" width="{{ photo.width }}" height="{{ photo.height }}" style="object-position:{{ photo.position }}" {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+{% endmacro %}
+
+{% macro programme_card(p) %}
+<a class="programme-card" href="{{ url_for('programme', slug=p.slug) }}">
+  <div class="programme-image">{{ school_image(p.image) }}<span class="programme-number">{{ p.number }}</span></div>
+  <div class="programme-body"><span class="eyebrow">{{ p.eyebrow }}</span><h3>{{ p.name }}</h3><p>{{ p.description }}</p><span class="text-link">Explore this stage {{ icon('arrow') }}</span></div>
+</a>
+{% endmacro %}
+
+{% macro post_card(post) %}
+<article class="post-card"><a href="{{ url_for('article',slug=post.slug) }}">{{ school_image(post.image_key) }}<span class="eyebrow">{{ post.category }}</span><h3>{{ post.title }}</h3><p>{{ post.excerpt }}</p><span class="text-link">Read the story {{ icon('arrow') }}</span></a></article>
+{% endmacro %}
+
+{% macro field(input, wide=false, attrs={}) %}
+<div class="field {{ 'full-width' if wide else '' }}">{{ input.label }}{{ input(**attrs) }}{% for error in input.errors %}<span class="field-error" role="alert">{{ error }}</span>{% endfor %}</div>
+{% endmacro %}
+
+{% macro enquiry_form(form, kind) %}
+<form method="post" class="enquiry-form" data-public-form>
+  {{ form.hidden_tag() }}
+  {% if form.errors %}<div class="form-error" role="alert">Please check the highlighted fields and try again.</div>{% endif %}
+  <div class="honeypot" aria-hidden="true">{{ form.website.label }}{{ form.website(tabindex='-1',autocomplete='off') }}</div>
+  <div class="form-grid">
+  {{ field(form.parent_name, attrs={'autocomplete':'name','placeholder':'Your full name'}) }}
+  {{ field(form.phone, attrs={'autocomplete':'tel','placeholder':'+254 …','type':'tel'}) }}
+  {{ field(form.email, true, attrs={'autocomplete':'email','placeholder':'you@example.com','type':'email'}) }}
+  {% if kind == 'admission' %}{{ field(form.child_first_name) }}{{ field(form.age_range) }}{{ field(form.programme, true) }}{% endif %}
+  {% if kind == 'visit' %}{{ field(form.preferred_date, true, attrs={'min':today}) }}{% endif %}
+  {{ field(form.message, true, attrs={'rows':4, 'placeholder':'Tell us a little about what you’re looking for. Please do not include sensitive information.'}) }}
+  </div>
+  <label class="checkbox-label">{{ form.consent() }}<span>I agree to be contacted about this enquiry and have read the <a href="{{ url_for('privacy') }}">privacy information</a>.</span></label>
+  {% for error in form.consent.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+  <button class="btn btn-green w-full" type="submit">{{ 'Request a visit' if kind == 'visit' else ('Send admission enquiry' if kind == 'admission' else 'Send your message') }} {{ icon('arrow') }}</button>
+  <p class="form-footnote">{% if preview_mode %}Online enquiries are not connected on this hosted page.{% else %}{{ 'A preferred date is a request. The school will contact you to confirm availability.' if kind == 'visit' else 'The school office will review your enquiry and contact you. An enquiry does not guarantee a place.' }}{% endif %}</p>
+  <p class="form-result" role="status" hidden></p>
+</form>
+{% endmacro %}
