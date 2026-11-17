@@ -368,5 +368,10 @@ def create_app(test_config=None):
     return app
 
 
+# Module-level WSGI application. Gunicorn/uWSGI/docker exec use this object.
+# Gunicorn's start command ("app:app") now resolves correctly.
+app = create_app()
+
+
 if __name__ == '__main__':
-    create_app().run(debug=os.getenv('FLASK_DEBUG') == '1')
+    app.run(debug=os.getenv('FLASK_DEBUG') == '1')
